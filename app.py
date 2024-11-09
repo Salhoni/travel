@@ -2,7 +2,14 @@ import os
 import pandas as pd
 import streamlit as st
 import requests
-from googletrans import Translator
+
+# Try to import the Google Translator library; if unavailable, set up a warning
+try:
+    from googletrans import Translator
+    translator_available = True
+except ImportError:
+    translator_available = False
+    st.warning("Translation feature not available. Please install `googletrans` for translation support.")
 
 # Load data from Excel file for offline mode
 data = pd.read_excel("/content/pak.xlsx")
@@ -18,9 +25,6 @@ def get_offline_response(query):
 # Groq API settings with corrected endpoint URL
 GROQ_API_KEY = "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"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-
-# Initialize the Translator object for Google Translate
-translator = Translator()
 
 # Streamlit UI for the chatbot
 st.title("Virtual Pakistan Travel Guide")
@@ -55,10 +59,15 @@ if st.button("Submit Query"):
                 st.write("Chatbot response (in English):")
                 st.write(response_text)
 
-                # Translate the response text into Urdu
-                translated_text = translator.translate(response_text, src='en', dest='ur').text
-                st.write("Chatbot response (in Urdu):")
-                st.write(translated_text)
+                # Translate the response text into Urdu, if translator is available
+                if translator_available:
+                    translator = Translator()
+                    translated_text = translator.translate(response_text, src='en', dest='ur').text
+                    st.write("Chatbot response (in Urdu):")
+                    st.write(translated_text)
+                else:
+                    st.write("Translation feature is currently unavailable.")
+
             else:
                 st.error("Unexpected API response format. Please check the response structure.")
 
@@ -67,14 +76,17 @@ if st.button("Submit Query"):
             response_text = get_offline_response(user_input)
             st.write(response_text)
 
-            # Translate the offline response into Urdu
-            translated_text = translator.translate(response_text, src='en', dest='ur').text
-            st.write("Offline response (in Urdu):")
-            st.write(translated_text)
+            # Translate the offline response into Urdu, if translator is available
+            if translator_available:
+                translator = Translator()
+                translated_text = translator.translate(response_text, src='en', dest='ur').text
+                st.write("Offline response (in Urdu):")
+                st.write(translated_text)
+            else:
+                st.write("Translation feature is currently unavailable.")
 
 # Conclusion and feedback collection
 st.write("Thank you for using the Pakistan Travel Assistant!")
 feedback = st.text_input("Please provide your feedback here:")
 if st.button("Submit Feedback"):
     st.write("Thank you for your feedback!")
-  
