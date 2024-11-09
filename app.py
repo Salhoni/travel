@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import streamlit as st
 import requests
@@ -11,8 +10,12 @@ except ImportError:
     translator_available = False
     st.warning("Translation feature not available. Please install `googletrans` for translation support.")
 
-# Load data from Excel file for offline mode
-data = pd.read_excel("/content/pak.xlsx")
+# Load data from uploaded Excel file
+uploaded_file = st.file_uploader("Upload the 'pak.xlsx' file", type="xlsx")
+if uploaded_file:
+    data = pd.read_excel(uploaded_file)
+else:
+    st.error("Please upload the 'pak.xlsx' file to use the offline response feature.")
 
 # Simulated offline response using the Excel data
 def get_offline_response(query):
@@ -73,17 +76,20 @@ if st.button("Submit Query"):
 
         except requests.exceptions.RequestException:
             # Fallback to offline mode response
-            response_text = get_offline_response(user_input)
-            st.write(response_text)
+            if uploaded_file:
+                response_text = get_offline_response(user_input)
+                st.write(response_text)
 
-            # Translate the offline response into Urdu, if translator is available
-            if translator_available:
-                translator = Translator()
-                translated_text = translator.translate(response_text, src='en', dest='ur').text
-                st.write("Offline response (in Urdu):")
-                st.write(translated_text)
+                # Translate the offline response into Urdu, if translator is available
+                if translator_available:
+                    translator = Translator()
+                    translated_text = translator.translate(response_text, src='en', dest='ur').text
+                    st.write("Offline response (in Urdu):")
+                    st.write(translated_text)
+                else:
+                    st.write("Translation feature is currently unavailable.")
             else:
-                st.write("Translation feature is currently unavailable.")
+                st.error("Please upload the 'pak.xlsx' file to use the offline response feature.")
 
 # Conclusion and feedback collection
 st.write("Thank you for using the Pakistan Travel Assistant!")
